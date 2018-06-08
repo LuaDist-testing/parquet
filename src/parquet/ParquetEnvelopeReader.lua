@@ -206,6 +206,13 @@ function ParquetEnvelopeReader.openFile(filePath)
   return ParquetEnvelopeReader:new(readFn, closeFn, fileSize)
 end
 
+function ParquetEnvelopeReader.openString(buffer)
+  local fileSize = #buffer
+  local readFn = function(position, length) return buffer:sub(position+1, position+length) end
+  local closeFn = function() end
+  return ParquetEnvelopeReader:new(readFn, closeFn, fileSize)
+end
+
 function ParquetEnvelopeReader:initialize(readFn, closeFn, fileSize)
   self.read = readFn
   self.close = closeFn

@@ -1,17 +1,9 @@
--- This file was automatically generated for the LuaDist project.
-
 package = "parquet"
-version = "0.8.0-2"
--- LuaDist source
+version = "0.8.0-3"
 source = {
-  tag = "0.8.0-2",
-  url = "git://github.com/LuaDist-testing/parquet.git"
+  url = "https://github.com/BixData/lua-parquet/archive/0.8.0-3.tar.gz",
+  dir = "lua-parquet-0.8.0-3"
 }
--- Original source
--- source = {
---   url = "https://github.com/BixData/lua-parquet/archive/0.8.0-2.tar.gz",
---   dir = "lua-parquet-0.8.0-2"
--- }
 description = {
   summary = "A pure Lua implementation of the Parquet file format",
   detailed = [[

@@ -39,6 +39,20 @@ function ParquetReader.openFile(filePath)
   return parquetReader
 end
 
+function ParquetReader.openString(buffer)
+  local envelopeReader = ParquetEnvelopeReader.openString(buffer)
+  local ok, parquetReader = pcall(function()
+    envelopeReader:readHeader()
+    local metadata = envelopeReader:readFooter()
+    return ParquetReader:new(metadata, envelopeReader)
+  end)
+  if not ok then
+    envelopeReader:close()
+    error(parquetReader)
+  end
+  return parquetReader
+end
+
 --[[
  * Create a new parquet reader from the file metadata and an envelope reader.
  * It is not recommended to call this constructor directly except for advanced

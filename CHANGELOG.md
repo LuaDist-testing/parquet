@@ -1,3 +1,7 @@
+## [0.8.0-3] - 2017-12-12
+### Added:
+- New `openString()` semantics to read directly from a string buffer
+
 ## [0.8.0-2] - 2017-12-09
 ### Added:
 - Port `ParquetEnvelopeReader` `decodeDataPage()`, `decodeDataPageV2()`, `readRowGroup()`, and `readColumnChunk()`
