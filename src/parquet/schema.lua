@@ -1,10 +1,8 @@
 local class = require 'middleclass'
---const parquet_codec = require('./codec');
---const parquet_compression = require('./compression');
+local parquet_codec = require 'parquet.codec'
+local parquet_compression = require 'parquet.compression'
 local parquet_types = require 'parquet.types'
 local parquet_util = require 'parquet.util'
-
---local PARQUET_COLUMN_KEY_SEPARATOR = '.'
 
 local unpack = table.unpack or unpack
 
@@ -34,7 +32,7 @@ end
  * Retrieve a field definition
 --]]
 function ParquetSchema:findField(path)
-  if not parquet_util.isArray(path) then
+  if type(path) == 'string' then
     path = parquet_util.split(path, ',')
   end
   
@@ -50,7 +48,7 @@ end
  * Retrieve a field definition and all the field's ancestors
 --]]
 function ParquetSchema:findFieldBranch(path)
-  if not parquet_util.isArray(path) then
+  if type(path) == 'string' then
     path = parquet_util.split(tostring(path), ',')
   end
   
@@ -132,17 +130,15 @@ function ParquetSchema:buildFields(schema, rLevelParentMax, dLevelParentMax, pat
         opts.encoding = 'PLAIN'
       end
   
-  --    if (!(opts.encoding in parquet_codec)) {
-  --      throw 'unsupported parquet encoding: ' + opts.encodig;
-  --    }
+      assert(parquet_codec[opts.encoding], 'unsupported parquet encoding: ' .. opts.encoding)
   
       if not opts.compression then
         opts.compression = 'UNCOMPRESSED'
       end
   
-  --    if (!(opts.compression in parquet_compression.PARQUET_COMPRESSION_METHODS)) {
-  --      throw 'unsupported compression method: ' + opts.compression;
-  --    }
+      if not parquet_compression.PARQUET_COMPRESSION_METHODS[opts.compression] then
+        error('unsupported compression method: ' .. opts.compression)
+      end
   
       -- add to schema
       fieldList[name] = {

@@ -39,4 +39,14 @@ describe('util', function()
     assert.same({'Orange', 'Lemon'}, citrus)
   end)
 
+  it('more slice', function()
+    local a = {'1:id', '2:point', '3:type', '4:size', '5:indices', '6:list', '7:element', '8:values', '9:list', '10:element'}
+    local b = parquet_util.slice(a, 3, 8)
+    assert.same({'3:type', '4:size', '5:indices', '6:list', '7:element'}, b)
+    local c = parquet_util.slice(b, 4, 6)
+    assert.same({'6:list', '7:element'}, c)
+    local d = parquet_util.slice(c, 2,4)
+    assert.same({'7:element'}, d)
+  end)
+  
 end)

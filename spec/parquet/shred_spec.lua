@@ -117,7 +117,6 @@ describe('ParquetShredder', function()
       price= { type='DOUBLE' }
     })
 
-
     local buf = {}
 
     do

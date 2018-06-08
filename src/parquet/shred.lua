@@ -1,3 +1,4 @@
+local Long = require 'long'
 local parquet_types = require 'parquet.types'
 local parquet_util = require 'parquet.util'
 
@@ -132,16 +133,14 @@ M.shredRecord = function(schema, record, buffer)
     parquet_util.arrayPush(columnDataForFieldPath.rlevels, recordShreddedForFieldPath.rlevels)
     parquet_util.arrayPush(columnDataForFieldPath.dlevels, recordShreddedForFieldPath.dlevels)
     parquet_util.arrayPush(columnDataForFieldPath.values, recordShreddedForFieldPath.values)
-    buffer.columnData[fieldPath].count = buffer.columnData[fieldPath].count + recordShredded[fieldPath].count
+    columnDataForFieldPath.count = columnDataForFieldPath.count + recordShredded[fieldPath].count
   end
 end
 
 _M.materializeRecordField = function(record, branch, rLevels, dLevel, value)
   local node = branch[1]
 
-  if dLevel < node.dLevelMax then
-    return
-  end
+  if dLevel < node.dLevelMax then return end
 
   if #branch > 1 then
     if node.repetitionType == "REPEATED" then
@@ -160,7 +159,7 @@ _M.materializeRecordField = function(record, branch, rLevels, dLevel, value)
         dLevel,
         value)
     else
-      record[node.name] = {}
+      record[node.name] = record[node.name] or {}
 
       _M.materializeRecordField(
           record[node.name],
@@ -175,11 +174,8 @@ _M.materializeRecordField = function(record, branch, rLevels, dLevel, value)
         record[node.name] = {}
       end
 
-      --while (record[node.name].length < rLevels[0] + 1) {
-      --  record[node.name].push(null);
-      --}
-      if #record[node.name] < rLevels[1] + 1 then
-        parquet_util.arrayPush(record[node.name], nil)
+      while #record[node.name] < rLevels[1] + 1 do
+        parquet_util.arrayPush(record[node.name], math.huge) -- Lua doesn't support nil table values
       end
 
       record[node.name][rLevels[1] + 1] = value
@@ -211,21 +207,24 @@ end
 --]]
 M.materializeRecords = function(schema, buffer)
   local records = {}
-  for i=1,buffer.rowCount do
+  local rowCount = buffer.rowCount
+  if parquet_util.isInstanceOf(rowCount, Long) then rowCount = rowCount:toInt() end
+  for i=1,rowCount do
     records[i] = {}
   end
 
   for k in pairs(buffer.columnData) do
     local field = schema:findField(k)
     local fieldBranch = schema:findFieldBranch(k)
-    local valuesIter = parquet_util.iterator(buffer.columnData[k].values)
+    local columnData = buffer.columnData[k]
+    local valuesIter = parquet_util.iterator(columnData.values)
 
     local rLevels = {}
     for i=1,field.rLevelMax+1 do rLevels[i] = 0 end
 
     for i=1,buffer.columnData[k].count do
-      local dLevel = buffer.columnData[k].dlevels[i]
-      local rLevel = buffer.columnData[k].rlevels[i]
+      local dLevel = columnData.dlevels[i]
+      local rLevel = columnData.rlevels[i]
       
       rLevels[rLevel+1] = rLevels[rLevel+1] + 1
       for j=rLevel+2,#rLevels do rLevels[j] = 0 end

@@ -2,6 +2,10 @@ local TCompactProtocol = require 'thrift.protocol.TCompactProtocol'
 local TMemoryBuffer = require 'thrift.transport.TMemoryBuffer'
 local TFramedTransport = require 'thrift.transport.TFramedTransport'
 
+local function log2(n)
+  return math.log(n) / math.log(2)
+end
+
 local M = {}
 
 M.arrayClone = function(t)
@@ -46,6 +50,15 @@ M.fsize = function(file)
   return file:seek('end')
 end
 
+-- Get the number of bits required to store a given value
+M.getBitWidth = function(val)
+  if val == 0 then
+    return 0
+  else
+    return math.ceil(log2(val + 1))
+  end
+end
+
 M.getThriftEnum = function(klass, value)
   for k,v in pairs(klass) do
     if v == value then return k end
@@ -60,6 +73,10 @@ M.isArray = function(t)
      if t[i] == nil then return false end
   end
   return true
+end
+
+M.isInstanceOf = function(obj, class)
+  return type(obj) == 'table' and obj.isInstanceOf and obj:isInstanceOf(class)
 end
 
 M.iterator = function(t)

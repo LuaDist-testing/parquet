@@ -112,6 +112,30 @@ avoid leaking file descriptors.
 reader:close()
 ```
 
+Compression
+-----------
+
+To keep this module as light and embeddable as possible, by default it only supports the 'UNCOMPRESSED' compression scheme.
+
+A calling program is expected to declare and require whatever compression mechanisms it intends to support, and register them.
+
+A compression algorithm is registered as follows:
+
+```lua
+local parquet_compression = require 'parquet.compresson'
+local brotli = require 'brotli'
+local gzip = require 'gzip'
+local lzo = require 'lzo'
+local snappy = require 'snappy'
+
+parquet_compression.register('BROTLI', brotli.compress, brotli.decompress)
+parquet_compression.register('GZIP', gzip.deflate, gzip.inflate)
+parquet_compression.register('LZO', lzo.deflate, lzo.inflate)
+parquet_compression.register('SNAPPY', snappy.compress, snappy.decompress)
+```
+
+This section is specific to this Lua module, and does not exist in original `parquet.js`.
+
 Encodings
 ---------
 

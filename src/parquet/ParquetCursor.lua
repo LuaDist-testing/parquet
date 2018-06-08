@@ -1,4 +1,5 @@
 local class = require 'middleclass'
+local parquet_shredder = require 'parquet.shred'
 
 --[[
  * A parquet cursor is used to retrieve rows from a parquet file in order
@@ -25,22 +26,18 @@ end
  * of the file was reached
 --]]
 function ParquetCursor:next()
-  error('not implemented yet')
-  --if (this.rowGroup.length === 0) {
-  --  if (this.rowGroupIndex >= this.metadata.row_groups.length) {
-  --    return null
-  --  }
-  --
-  --  let rowBuffer = await this.envelopeReader.readRowGroup(
-  --      this.schema,
-  --      this.metadata.row_groups[this.rowGroupIndex],
-  --      this.columnList)
-  --
-  --  this.rowGroup = parquet_shredder.materializeRecords(this.schema, rowBuffer)
-  --  this.rowGroupIndex++
-  --}
-  --
-  --return this.rowGroup.shift()
+  if #self.rowGroup == 0 then
+    if self.rowGroupIndex >= #self.metadata.row_groups then return nil end
+  
+    local rowBuffer = self.envelopeReader:readRowGroup(
+      self.schema,
+      self.metadata.row_groups[self.rowGroupIndex + 1],
+      self.columnList)
+  
+    self.rowGroup = parquet_shredder.materializeRecords(self.schema, rowBuffer)
+    self.rowGroupIndex = self.rowGroupIndex + 1
+  end
+  return table.remove(self.rowGroup, 1)
 end
 
 --[[

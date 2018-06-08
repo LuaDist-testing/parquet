@@ -1,9 +1,10 @@
 local class = require 'middleclass'
---const parquet_codec = require('./codec')
---const parquet_compression = require('./compression')
+--local parquet_codec = require 'parquet.codec'
+--local parquet_compression = require 'parquet.compression'
 local parquet_schema = require 'parquet.schema'
 local parquet_ttypes = require 'parquet.parquet_ttypes'
 local parquet_util = require 'parquet.util'
+local ParquetCursor = require 'parquet.ParquetCursor'
 local ParquetEnvelopeReader = require 'parquet.ParquetEnvelopeReader'
 
 --[[
@@ -18,7 +19,6 @@ local PARQUET_VERSION = 1
  * important that you call close() after you are finished reading the file to
  * avoid leaking file descriptors.
 --]]
---class ParquetReader {
 local ParquetReader = class('ParquetReader')
 
 --[[
@@ -52,32 +52,22 @@ function ParquetReader:initialize(metadata, envelopeReader)
 
   self.metadata = metadata
   self.envelopeReader = envelopeReader
-  self.schema = parquet_schema.ParquetSchema:new(self:decodeSchema(
-    parquet_util.splice(self.metadata.schema, 2)))
+  self.schema = parquet_schema.ParquetSchema:new(self:decodeSchema(self.metadata.schema))
 end
 
---  /**
---   * Return a cursor to the file. You may open more than one cursor and use
---   * them concurrently. All cursors become invalid once close() is called on
---   * the reader object.
---   *
---   * The required_columns parameter controls which columns are actually read
---   * from disk. An empty array or no value implies all columns. A list of column
---   * names means that only those columns should be loaded from disk.
---   */
---  getCursor(columnList) {
---    if (!columnList) {
---      columnList = [];
---    }
---
---    columnList = columnList.map((x) => x.constructor === Array ? x : [x]);
---
---    return new ParquetCursor(
---        this.metadata,
---        this.envelopeReader,
---        this.schema,
---        columnList);
---  }
+--[[
+ * Return a cursor to the file. You may open more than one cursor and use
+ * them concurrently. All cursors become invalid once close() is called on
+ * the reader object.
+ *
+ * The required_columns parameter controls which columns are actually read
+ * from disk. An empty array or no value implies all columns. A list of column
+ * names means that only those columns should be loaded from disk.
+--]]
+function ParquetReader:getCursor(columnList)
+  columnList = columnList or {}
+  return ParquetCursor:new(self.metadata, self.envelopeReader, self.schema, columnList)
+end
 
 --[[
  * Return the number of rows in this file. Note that the number of rows is
@@ -307,47 +297,46 @@ end
 --}
 
 function ParquetReader:decodeSchema(schemaElements)
+  local iter = parquet_util.iterator(schemaElements)
+  local root = iter()
+  return self:buildChildren(iter, root.num_children)
+end
+
+function ParquetReader:buildChildren(schemaElementIterator, childrenCount)
   local schema = {}
-  local skip = 0
-  for idx = 1, #schemaElements do
-    local schemaElement = schemaElements[idx]
+  for i = 1, childrenCount do
+    local schemaElement = schemaElementIterator()
     
-    if skip > 0 then
-      skip = skip - 1
-    else
-      local repetitionType = parquet_util.getThriftEnum(
-        parquet_ttypes.FieldRepetitionType,
-        (schemaElement or {}).repetition_type)
-  
-      local optional = false
-      local repeated = false
-      if repetitionType == 'OPTIONAL' then
-        optional = true
-      elseif repetitionType == 'REPEATED' then
-        repeated = true
-      end
-  
-      if schemaElement.num_children or 0 > 0 then
-        schema[schemaElement.name] = {
-          optional=optional,
-          repeated=repeated,
-          fields=self:decodeSchema(parquet_util.slice(schemaElements, idx + 1, idx + 1 + schemaElement.num_children))
-        }
-      else
-        local logicalType = parquet_util.getThriftEnum(parquet_ttypes.Type, schemaElement.type)
-  
-        if schemaElement.converted_type ~= nil then
-          logicalType = parquet_util.getThriftEnum(parquet_ttypes.ConvertedType, schemaElement.converted_type)
-        end
-  
-        schema[schemaElement.name] = {
-          type=logicalType,
-          optional=optional,
-          repeated=repeated
-        }
-      end
+    local repetitionType = parquet_util.getThriftEnum(
+      parquet_ttypes.FieldRepetitionType,
+      (schemaElement or {}).repetition_type)
+
+    local optional, repeated = false, false
+    if repetitionType == 'OPTIONAL' then
+      optional = true
+    elseif repetitionType == 'REPEATED' then
+      repeated = true
     end
-    skip = skip + (schemaElement.num_children or 0)
+
+    if schemaElement.num_children or 0 > 0 then
+      schema[schemaElement.name] = {
+        optional=optional,
+        repeated=repeated,
+        fields=self:buildChildren(schemaElementIterator, schemaElement.num_children)
+      }
+    else
+      local logicalType = parquet_util.getThriftEnum(parquet_ttypes.Type, schemaElement.type)
+
+      if schemaElement.converted_type ~= nil then
+        logicalType = parquet_util.getThriftEnum(parquet_ttypes.ConvertedType, schemaElement.converted_type)
+      end
+
+      schema[schemaElement.name] = {
+        type=logicalType,
+        optional=optional,
+        repeated=repeated
+      }
+    end
   end
 
   return schema
