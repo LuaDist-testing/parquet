@@ -1,3 +1,7 @@
+local TCompactProtocol = require 'thrift.protocol.TCompactProtocol'
+local TMemoryBuffer = require 'thrift.transport.TMemoryBuffer'
+local TFramedTransport = require 'thrift.transport.TFramedTransport'
+
 local M = {}
 
 M.arrayClone = function(t)
@@ -13,6 +17,15 @@ M.arrayPush = function(t, value)
     t[#t+1] = value
   end
   return t
+end
+
+M.decodeThrift = function(obj, buf, offset)
+  offset = offset or 0
+  local transport = TFramedTransport:new(buf)
+  transport.readPos = offset + 1 -- readPos is 1-based
+  local protocol = TCompactProtocol:new(transport)
+  obj:read(protocol)
+  return transport.readPos - offset - 1
 end
 
 M.fclose = function(file)
@@ -31,6 +44,12 @@ end
 
 M.fsize = function(file)
   return file:seek('end')
+end
+
+M.getThriftEnum = function(klass, value)
+  for k,v in pairs(klass) do
+    if v == value then return k end
+  end
 end
 
 M.isArray = function(t)
@@ -57,12 +76,28 @@ M.keyCount = function(t)
   return c
 end
 
+-- serialize a thrift object into a buffer
+M.serializeThrift = function(obj)
+  local memoryBuffer = TMemoryBuffer:new()
+  local protocol = TCompactProtocol:new(memoryBuffer)
+  obj:write(protocol)
+  return memoryBuffer:getBuffer()
+end
+
+-- JavaScript splice, but using Lua 1-based indexes
 M.splice = function(t, start, deleteCount)
-  deleteCount = deleteCount or 1
-  for i=1,deleteCount do
-    t[start+i-1] = nil
+  local removed = {}
+  local endIndexInclusive
+  if deleteCount == nil then
+    endIndexInclusive = #t
+  else
+    endIndexInclusive = start + deleteCount - 1
   end
-  return t
+  for i=endIndexInclusive, start, -1 do
+    table.insert(removed, 1, t[i])
+    table.remove(t, i)
+  end
+  return removed
 end
 
 M.split = function(s, sep)
@@ -73,15 +108,22 @@ M.split = function(s, sep)
   return fields
 end
 
-M.slice = function(t, startIndex)
+-- JavaScript slice, but using Lua 1-based indexes
+M.slice = function(t, begin, endExclusive)
   if type(t) == 'table' then
     local r = {}
-    for i=(startIndex or 1),#t do
+    local end_
+    if endExclusive == nil then
+      end_ = #t
+    else
+      end_ = endExclusive - 1
+    end
+    for i=(begin or 1),end_ do
       r[#r+1] = t[i]
     end
     return r
   else
-    return string.sub(t, startIndex)
+    return string.sub(t, begin)
   end
 end
 

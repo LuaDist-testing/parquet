@@ -1,16 +1,16 @@
 local M = {}
 
-local toPrimitive_BOOLEAN = function(value)
+local function toPrimitive_BOOLEAN(value)
   error('not implemented yet', value)
   return not not value
 end
 
-local fromPrimitive_BOOLEAN = function(value)
+local function fromPrimitive_BOOLEAN(value)
   error('not implemented yet', value)
   return not not value
 end
 
-local toPrimitive_FLOAT = function(value)
+local function toPrimitive_FLOAT(value)
   error('not implemented yet', value)
 --  const v = parseFloat(value);
 --  if (isNaN(v)) {
@@ -20,7 +20,7 @@ local toPrimitive_FLOAT = function(value)
 --  return v;
 end
 
-local toPrimitive_DOUBLE = function(value)
+local function toPrimitive_DOUBLE(value)
   if value == nil then return nil end
 --  const v = parseFloat(value);
   local v = value
@@ -32,7 +32,7 @@ local toPrimitive_DOUBLE = function(value)
   return v
 end
 
-local toPrimitive_INT8 = function(value)
+local function toPrimitive_INT8(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < -0x80 || v > 0x7f || isNaN(v)) {
@@ -42,7 +42,7 @@ local toPrimitive_INT8 = function(value)
 --  return v;
 end
 
-local toPrimitive_UINT8 = function(value)
+local function toPrimitive_UINT8(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < 0 || v > 0xff || isNaN(v)) {
@@ -52,7 +52,7 @@ local toPrimitive_UINT8 = function(value)
 --  return v;
 end
 
-local toPrimitive_INT16 = function(value)
+local function toPrimitive_INT16(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < -0x8000 || v > 0x7fff || isNaN(v)) {
@@ -62,7 +62,7 @@ local toPrimitive_INT16 = function(value)
 --  return v;
 end
 
-local toPrimitive_UINT16 = function(value)
+local function toPrimitive_UINT16(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < 0 || v > 0xffff || isNaN(v)) {
@@ -72,7 +72,7 @@ local toPrimitive_UINT16 = function(value)
 --  return v;
 end
 
-local toPrimitive_INT32 = function(value)
+local function toPrimitive_INT32(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < -0x80000000 || v > 0x7fffffff || isNaN(v)) {
@@ -82,7 +82,7 @@ local toPrimitive_INT32 = function(value)
 --  return v;
 end
 
-local toPrimitive_UINT32 = function(value)
+local function toPrimitive_UINT32(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < 0 || v > 0xffffffffffff || isNaN(v)) {
@@ -92,7 +92,7 @@ local toPrimitive_UINT32 = function(value)
 --  return v;
 end
 
-local toPrimitive_INT64 = function(value)
+local function toPrimitive_INT64(value)
   if value == nil then return nil end
 --  const v = parseInt(value, 10);
   local v = value
@@ -105,7 +105,7 @@ local toPrimitive_INT64 = function(value)
   return v
 end
 
-local toPrimitive_UINT64 = function(value)
+local function toPrimitive_UINT64(value)
   error('not implemented yet', value)
   if value == nil then return nil end
 --  const v = parseInt(value, 10);
@@ -119,7 +119,7 @@ local toPrimitive_UINT64 = function(value)
   return v
 end
 
-local toPrimitive_INT96 = function(value)
+local function toPrimitive_INT96(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (isNaN(v)) {
@@ -129,30 +129,42 @@ local toPrimitive_INT96 = function(value)
 --  return v;
 end
 
-local toPrimitive_BYTE_ARRAY = function(value)
+local function toPrimitive_BYTE_ARRAY(value)
   error('not implemented yet', value)
 --  return Buffer.from(value);
 end
 
-local toPrimitive_UTF8 = function(value)
+local function toPrimitive_UTF8(value)
   return tostring(value)
 end
 
-local fromPrimitive_UTF8 = function(value)
+local function fromPrimitive_UTF8(value)
   return tostring(value)
 end
 
-local toPrimitive_JSON = function(value)
+local function toPrimitive_JSON(value)
   error('not implemented yet', value)
 --  return Buffer.from(JSON.stringify(value));
 end
 
-local fromPrimitive_JSON = function(value)
+local function fromPrimitive_JSON(value)
   error('not implemented yet', value)
 --  return JSON.parse(value);
 end
 
-local toPrimitive_TIME_MILLIS = function(value)
+local function toPrimitive_BSON(value)
+  error('not implemented yet', value)
+--  var encoder = new BSON();
+--  return Buffer.from(encoder.serialize(value));
+end
+
+local function fromPrimitive_BSON(value)
+  error('not implemented yet', value)
+--  var decoder = new BSON();
+--  return decoder.deserialize(value);
+end
+
+local function toPrimitive_TIME_MILLIS(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < 0 || v > 0xffffffffffffffff || isNaN(v)) {
@@ -162,7 +174,7 @@ local toPrimitive_TIME_MILLIS = function(value)
 --  return v;
 end
 
-local toPrimitive_TIME_MICROS = function(value)
+local function toPrimitive_TIME_MICROS(value)
   error('not implemented yet', value)
 --  const v = parseInt(value, 10);
 --  if (v < 0 || isNaN(v)) {
@@ -172,7 +184,7 @@ local toPrimitive_TIME_MICROS = function(value)
 --  return v;
 end
 
-local toPrimitive_TIMESTAMP_MILLIS = function(value)
+local function toPrimitive_TIMESTAMP_MILLIS(value)
   error('not implemented yet', value)
   -- convert from date
 --  if (value instanceof Date) {
@@ -190,12 +202,12 @@ local toPrimitive_TIMESTAMP_MILLIS = function(value)
 --  }
 end
 
-local fromPrimitive_TIMESTAMP_MILLIS = function(value)
+local function fromPrimitive_TIMESTAMP_MILLIS(value)
   error('not implemented yet', value)
 --  return new Date(value);
 end
 
-local toPrimitive_TIMESTAMP_MICROS = function(value)
+local function toPrimitive_TIMESTAMP_MICROS(value)
   error('not implemented yet', value)
   -- convert from date
 --  if (value instanceof Date) {
@@ -213,7 +225,7 @@ local toPrimitive_TIMESTAMP_MICROS = function(value)
 --  }
 end
 
-local fromPrimitive_TIMESTAMP_MICROS = function(value)
+local function fromPrimitive_TIMESTAMP_MICROS(value)
   error('not implemented yet', value)
 --  return new Date(value / 1000);
 end
@@ -348,6 +360,12 @@ M.PARQUET_LOGICAL_TYPES = {
     originalType='JSON',
     toPrimitive=toPrimitive_JSON,
     fromPrimitive=fromPrimitive_JSON
+  },
+  ['BSON']={
+    primitiveType='BYTE_ARRAY',
+    originalType='BSON',
+    toPrimitive=toPrimitive_BSON,
+    fromPrimitive=fromPrimitive_BSON
   }
 }
 

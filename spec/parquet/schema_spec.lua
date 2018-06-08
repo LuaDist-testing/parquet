@@ -1,4 +1,4 @@
-local parquet = require('parquet');
+local parquet = require('parquet')
 
 local tableLength = function(t)
   local c = 0
